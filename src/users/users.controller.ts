@@ -8,23 +8,43 @@ import {
   Post,
   Query,
   NotFoundException,
-  UseInterceptors,
-  ClassSerializerInterceptor,
+  Session,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { UsersService } from './users.service';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { UserDto } from './dtos/user.dto';
+import { AuthService } from './auth.service';
 
 @Controller('auth') //use auth instead
 @Serialize(UserDto)
 export class UsersController {
-  constructor(private userService: UsersService) {}
+  constructor(
+    private userService: UsersService,
+    private authService: AuthService,
+  ) {}
+  // Try on session
+  //   @Get('/colors/:color')
+  //   setColor(@Param('color') color: string, @Session() session: any) {
+  //     session.color = color;
+  //   }
+
+  //   @Get('/colors')
+  //   getColor(@Session() session: any) {
+  //     return session.color;
+  //   }
+
   @Post('/signup')
   createUser(@Body() body: CreateUserDto) {
     // console.log(body);
-    return this.userService.create(body.email, body.password);
+    // return this.userService.create(body.email, body.password); --> plain password
+    return this.authService.signup(body.email, body.password);
+  }
+
+  @Post('/signin')
+  signinUser(@Body() body: CreateUserDto) {
+    return this.authService.signin(body.email, body.password);
   }
 
   // @UseInterceptors(ClassSerializerInterceptor) --> Use entity
