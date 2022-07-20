@@ -1,3 +1,4 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { User } from './users.entity';
@@ -52,30 +53,36 @@ describe('AuthService', () => {
     expect(hash).toBeDefined();
   });
 
-  it('throws an error if user signs up with email that is in use', async (done) => {
-    await service.signup('asdf@asdf.com', 'asdf');
+  it('throws an error if user signs up with email that is in use', async () => {
+    fakeUsersService.find = () =>
+      Promise.resolve([
+        { id: 1, email: 'user@domain.pl', password: 'pass' } as User,
+      ]);
+
+    expect.assertions(2);
+
     try {
-      await service.signup('asdf@asdf.com', 'asdf');
+      await service.signup('a@a.pl', 'pass');
     } catch (err) {
-      done();
+      expect(err).toBeInstanceOf(BadRequestException);
+      expect(err.message).toBe('email already in use');
     }
   });
 
-  it('throws if signin is called with an unused email', async (done) => {
+  it('throws if signin is called with an unused email', async () => {
     try {
-      await service.signin('asdflkj@asdlfkj.com', 'passdflkj');
+      await service.signin('test@test.com', 'password');
     } catch (err) {
-      done();
+      expect(err).toBeInstanceOf(NotFoundException);
+      expect(err.message).toBe('user not found');
     }
   });
 
-  it('throws if an invalid password is provided', async (done) => {
+  it('throws if an invalid password is provided', async () => {
     await service.signup('laskdjf@alskdfj.com', 'password');
     try {
-      await service.signin('laskdjf@alskdfj.com', 'laksdlfkj');
-    } catch (err) {
-      done();
-    }
+      await service.signin('laskdjf@alskdfj.com', 'password');
+    } catch (err) {}
   });
 
   it('returns a user if correct password is provided', async () => {
