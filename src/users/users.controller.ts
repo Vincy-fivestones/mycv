@@ -9,6 +9,8 @@ import {
   Query,
   NotFoundException,
   Session,
+  // UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
@@ -16,35 +18,62 @@ import { UsersService } from './users.service';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { UserDto } from './dtos/user.dto';
 import { AuthService } from './auth.service';
+import { User } from './users.entity';
+import { CurrentUser } from './decorators/current-decorator';
+// import { CurrentUserInterceptor } from './interceptors/current-user.interceptor';
+import { AuthGuard } from 'src/guards/auth.guard';
 
+// Run CurrentUserInterceptor -> CurrentUser -> Serialize
 @Controller('auth') //use auth instead
 @Serialize(UserDto)
+// @UseInterceptors(CurrentUserInterceptor)
 export class UsersController {
   constructor(
     private userService: UsersService,
     private authService: AuthService,
   ) {}
   // Try on session
-  //   @Get('/colors/:color')
-  //   setColor(@Param('color') color: string, @Session() session: any) {
-  //     session.color = color;
+  @Get('/colors/:color')
+  setColor(@Param('color') color: string, @Session() session: any) {
+    session.color = color;
+  }
+
+  @Get('/colors')
+  getColor(@Session() session: any) {
+    return session.color;
+  }
+
+  //   @Get('whoami')
+  //   whoAmI(@Session() session: any) {
+  //     return this.userService.findOne(session.userId);
   //   }
 
-  //   @Get('/colors')
-  //   getColor(@Session() session: any) {
-  //     return session.color;
-  //   }
+  @Get('/whoami')
+  // use decorator to prevent find null
+  @UseGuards(AuthGuard) // not sigin can't get in
+  whoAmI(@CurrentUser() user: User) {
+    return user;
+  }
+
+  @Post('/signout')
+  sigPut(@Session() session: any) {
+    session.userId = null;
+  }
 
   @Post('/signup')
-  createUser(@Body() body: CreateUserDto) {
+  async createUser(@Body() body: CreateUserDto, @Session() session: any) {
     // console.log(body);
     // return this.userService.create(body.email, body.password); --> plain password
-    return this.authService.signup(body.email, body.password);
+    const user = await this.authService.signup(body.email, body.password);
+    session.userId = user.id;
+    return user;
   }
 
   @Post('/signin')
-  signinUser(@Body() body: CreateUserDto) {
-    return this.authService.signin(body.email, body.password);
+  async signinUser(@Body() body: CreateUserDto, @Session() session: any) {
+    const user = await this.authService.signin(body.email, body.password);
+    session.userId = user.id;
+    return user;
   }
 
   // @UseInterceptors(ClassSerializerInterceptor) --> Use entity
