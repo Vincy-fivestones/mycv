@@ -14,7 +14,7 @@ import { Report } from './reports/reports.entity';
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'db.sqlite', // auto created db.sqlite in root directory
-      entities: [User, Report],
+      entities: [User, Report], // entities: ['dist/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
   ],
