@@ -21,6 +21,9 @@ export class User {
   // @Exclude() // not pass back -- won't be showed
   password: string;
 
+  @Column({ default: true })
+  admin: boolean;
+
   @OneToMany(() => Report, (report) => report.user)
   reports: Report[];
 
