@@ -11,7 +11,7 @@ async function bootstrap() {
   //     whitelist: true, // will not show extra property
   //   }),
   // );
-  setUpApp(app);
+  //setUpApp(app);
   await app.listen(3000);
 }
 bootstrap();

@@ -11,6 +11,7 @@ import { plainToInstance } from 'class-transformer';
 
 interface ClassConstructor {
   // ensure the type is at least class
+  // eslint-disable-next-line @typescript-eslint/ban-types
   new (...args: any[]): {};
 }
 
